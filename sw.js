@@ -1,5 +1,5 @@
 // Service worker: tiene in memoria tutti i file del gioco, così l'app installata funziona anche senza internet.
-// La build sostituisce ["./","./assets/index-RxNExfW4.css","./assets/index-BpICXMzM.js","./manifest.webmanifest","./icona-192.png","./icona-512.png","./apple-touch-icon.png"] e 1794392897877 (vedi vite.config.ts): a ogni versione nuova si scarica tutto di nuovo.
+// La build sostituisce ["./","./assets/index-RxNExfW4.css","./assets/index-dUhKR7HU.js","./manifest.webmanifest","./icona-192.png","./icona-512.png","./apple-touch-icon.png"] e 1794393431364 (vedi vite.config.ts): a ogni versione nuova si scarica tutto di nuovo.
 const CACHE = "grimo-beba-__VERSION__";
 const FILES = __FILES__;
 
