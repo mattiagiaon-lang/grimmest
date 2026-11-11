@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#2a2233" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Grimmest" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="./icona-192.png" />
+    <title>The Grimmest Adventure</title>
+    <!-- Copia dei salvataggi nell account Claude quando il gioco gira come artifact (capability db + user); fuori da Claude non fa niente. Deve partire prima del gioco. -->
+<script>
+(function(){
+  var P="grimo-beba:",TK=P+"__t",ls=null;try{ls=window.localStorage}catch(e){}
+  if(!ls)return;
+  var S=Storage.prototype,rawGet=S.getItem,rawSet=S.setItem,rawRem=S.removeItem,quiet=false;
+  function get(k){return rawGet.call(ls,k)}
+  function times(){try{return JSON.parse(get(TK)||"{}")}catch(e){return{}}}
+  function saveTimes(m){try{rawSet.call(ls,TK,JSON.stringify(m))}catch(e){}}
+  var dirty={},timer=null,ready=false,col=null,cloud={},pushing=false;
+  function touch(k){if(quiet||k.indexOf(P)!==0||k===TK)return;var m=times();m[k]=Date.now();saveTimes(m);dirty[k]=1;sched()}
+  S.setItem=function(k,v){rawSet.call(this,k,v);if(this===ls)touch(String(k))};
+  S.removeItem=function(k){rawRem.call(this,k);if(this===ls)touch(String(k))};
+  function sched(d){if(!ready)return;clearTimeout(timer);timer=setTimeout(push,d==null?2500:d)}
+  async function push(){
+    if(!ready||pushing)return;pushing=true;
+    try{var keys=Object.keys(dirty);dirty={};var m=times();
+      for(var i=0;i<keys.length;i++){var k=keys[i],v=get(k);
+        try{if(v==null){await col.doc(k).delete();delete cloud[k]}
+            else if(v.length<240000){var t=m[k]||Date.now();await col.doc(k).set({v:v,t:t});cloud[k]=t}}
+        catch(e){if(!e||e.code!=="invalid_argument"&&e.code!=="quota_exceeded")dirty[k]=1}}
+    }finally{pushing=false}
+    if(Object.keys(dirty).length)sched(8000);
+  }
+  document.addEventListener("visibilitychange",function(){if(document.hidden)setTimeout(function(){sched(0)},60)});
+  addEventListener("pagehide",function(){sched(0)});
+  window.__gbCloud={stato:function(){return ready?"attivo":"non disponibile"}};
+  (async function(){
+    try{
+      if(!window.claude||!window.claude.use)return;
+      var db=await window.claude.use("db"),user=await window.claude.use("user");if(!db||!user)return;
+      var uid=await user.id();if(!uid)return;
+      col=db.doc("data/users/"+uid+"/grimmest").collection("salvataggi");
+      var snap=await Promise.race([col.get(),new Promise(function(r){setTimeout(function(){r(null)},10000)})]);
+      if(!snap)return;
+      var m=times(),restored=false,playing=!!(window.game&&window.game.phase==="play");
+      snap.docs.forEach(function(d){var x=d.data()||{},k=d.id;if(typeof x.v!=="string")return;cloud[k]=x.t||0;
+        var lt=m[k]||0;
+        // cancellata qui dopo l'ultima copia (partita nuova nello slot, slot cancellato): non torna indietro, si toglie anche dall'account
+        if(get(k)==null&&lt>cloud[k]){dirty[k]=1;return}
+        if(!playing&&(get(k)==null||cloud[k]>lt)){quiet=true;try{rawSet.call(ls,k,x.v)}catch(e){}quiet=false;m[k]=cloud[k];restored=true}});
+      saveTimes(m);
+      for(var i=0;i<ls.length;i++){var k=ls.key(i);if(k&&k.indexOf(P)===0&&k!==TK&&(!(k in cloud)||(m[k]||0)>cloud[k]))dirty[k]=1}
+      ready=true;
+      if(restored){try{sessionStorage.setItem("gb:cloud","1")}catch(e){}location.reload();return}
+      sched(1000);
+    }catch(e){}
+  })();
+  try{if(sessionStorage.getItem("gb:cloud")){sessionStorage.removeItem("gb:cloud");setTimeout(function(){window.game&&window.game.toast("Partite riprese dal tuo account Claude")},1800)}}catch(e){}
+})();
+</script>
+    <script type="module" crossorigin src="./assets/index-CS6rnQqN.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-RxNExfW4.css">
+  </head>
+  <body>
+    <main id="app">
+      <div id="screen-wrap">
+        <canvas id="screen" width="320" height="288" aria-label="Schermo di gioco"></canvas>
+      </div>
+      <div id="touch" aria-hidden="true">
+        <div class="pad">
+          <span></span><button data-k="up">▲</button><span></span>
+          <button data-k="left">◀</button><span class="pad-c"></span><button data-k="right">▶</button>
+          <span></span><button data-k="down">▼</button><span></span>
+        </div>
+        <div class="side">
+          <div class="ab">
+            <button data-k="b" class="round">B</button>
+            <button data-k="a" class="round">A</button>
+          </div>
+        </div>
+      </div>
+      <p id="keys">
+        Frecce/WASD: tocco = girati, tieni premuto = cammina · A (Z/Spazio): parla, usa, rispondi al telefono ·
+        B (X/Esc): tocco = menu, tieni premuto = corri
+      </p>
+    </main>
+  </body>
+</html>
