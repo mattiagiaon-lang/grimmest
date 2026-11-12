@@ -1,6 +1,6 @@
 // Service worker: tiene in memoria tutti i file del gioco, così l'app installata funziona anche senza internet.
 // Versione del 12 novembre (gioco in un file solo, index.html): cambia CACHE a ogni versione nuova.
-const CACHE = "grimo-beba-1794483463716";
+const CACHE = "grimo-beba-1794488668274";
 const FILES = ["./","./manifest.webmanifest","./icona-192.png","./icona-512.png","./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
