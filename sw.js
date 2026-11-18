@@ -1,6 +1,6 @@
 // Service worker: tiene in memoria il gioco, così una volta aperto funziona anche senza internet.
 // Scritto da tools/sito-completo.mjs: a ogni versione nuova cambia il nome della cache e si riscarica tutto.
-const CACHE = "grimo-beba-1795021147990";
+const CACHE = "grimo-beba-1795030824115";
 const FILES = ["./","./manifest.webmanifest","./icona-192.png","./icona-512.png","./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
